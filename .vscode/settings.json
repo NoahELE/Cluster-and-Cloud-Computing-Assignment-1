@@ -1,0 +1,6 @@
+{
+  "cSpell.words": ["orjson", "simdjson"],
+  "python.testing.pytestArgs": ["test"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
+}
