@@ -7,24 +7,15 @@ from mpi4py.MPI import Intracomm
 
 
 def send_lines(file: str, comm: Intracomm) -> None:
-    """
-    send the lines of data file from rank 0 to other ranks
-    (skip the first and last line)
-    """
-    with open(file, encoding="utf-8") as f:
-        # get the lines (skip the first and last line)
-        lines = f.readlines()[1:-1]
-
+    """send the lines of data file from rank 0 to other ranks"""
     size = comm.Get_size()
     ranks = range(1, size)
-    # send the lines to ranks 1 to size - 1
     i = 0
-    for line in lines:
-        # remove trailing comma and newline
-        line = line.rstrip(",\n")
-        comm.send(line, dest=ranks[i])
-        # move to the next rank (skip rank 0)
-        i = (i + 1) % len(ranks)
+    with open(file, encoding="utf-8") as f:
+        # send the lines to ranks 1 to size - 1
+        for line in f:
+            comm.send(line, dest=ranks[i])
+            i = (i + 1) % len(ranks)
     # send None to all ranks to indicate the end of the data
     for r in ranks:
         comm.send(None, dest=r)
@@ -38,9 +29,16 @@ def process_lines(
     day_sentiment: dict[datetime, float] = defaultdict(float)
     hour_tweets: dict[datetime, int] = defaultdict(int)
     day_tweets: dict[datetime, int] = defaultdict(int)
-    # process the lines until a empty string is received
+    # process the lines until None is received
     while (line := comm.recv(source=0)) is not None:
-        row = orjson.loads(line)
+        # remove trailing comma and newline
+        line = line.rstrip(",\n")
+        try:
+            row = orjson.loads(line)
+        except orjson.JSONDecodeError:
+            # if the line is not a valid JSON, skip it
+            # in this case, it should be the first and last line of the file
+            continue
         sentiment = get_sentiment(row)
         hour = get_hour(row)
         day = get_day(row)
@@ -67,9 +65,10 @@ def process_lines(
 def merge_and_print_results(comm: Intracomm) -> None:
     """merge the results from all ranks"""
     size = comm.Get_size()
+    # receive the results from all ranks
     results = []
-    for i in range(1, size):
-        results.append(comm.recv(source=i))
+    for _ in range(1, size):
+        results.append(comm.recv())
     # merge the results
     merged_hour_sentiment: dict[datetime, float] = defaultdict(float)
     merged_day_sentiment: dict[datetime, float] = defaultdict(float)
