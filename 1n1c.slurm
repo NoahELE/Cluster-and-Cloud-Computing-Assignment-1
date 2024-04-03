@@ -17,4 +17,4 @@ pip install orjson
 
 # Launch multiple process python code
 echo "running with 1 node and 1 cores"
-time srun -n 8 python3 process_twitter_data.py
+time srun python3 process_twitter_data.py
