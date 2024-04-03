@@ -34,6 +34,7 @@ gathered: list[dict[int, list[float]]] | None = comm.gather(hour_sentiment, root
 if rank == 0:
     merged: dict[int, list[float]] = {}
     assert gathered is not None
+    print("gathered: ", gathered[0])
     for g in gathered:
         for k, v in g.items():
             if k not in merged:
