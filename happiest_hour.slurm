@@ -5,12 +5,12 @@
 
 # Load required modules
 module purge
-module load Python/3.10.4
-module load mpi4py/3.1.4
+module load GCCcore/11.3.0 Python/3.10.4
+module load GCC/11.3.0 OpenMPI/4.1.4 mpi4py
 
 # Create and activate virtual environment
-virtualenv ~/venvs/venv-3.10.4
-source ~/venvs/venv-3.10.4/bin/activate
+python3 -m venv ~/.venv
+source ~/.venv/bin/activate
 
 # Install addtional packages
 pip install orjson
