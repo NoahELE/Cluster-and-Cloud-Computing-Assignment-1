@@ -1,18 +1,17 @@
 from mpi4py import MPI
 
-from utils import get_day, get_lines, get_sentiment, parse_line
+from utils import DATA_100GB_LINES, get_day, get_lines, get_sentiment, parse_line
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
 size = comm.Get_size()
 
-lines = get_lines("../twitter-100gb.json")
+chunk_size = (DATA_100GB_LINES - 2) // size
+start = 1 + rank * chunk_size
+end = start + chunk_size if rank != size - 1 else DATA_100GB_LINES - 1
 
-chunk_size = len(lines) // size
-start = rank * chunk_size
-end = start + chunk_size if rank != size - 1 else len(lines)
-
-rows = [parse_line(line) for line in lines[start:end]]
+lines = get_lines("../twitter-100gb.json", start, end)
+rows = (parse_line(line) for line in lines)
 
 day_sentiment: dict[int, float] = {}
 for row in rows:
