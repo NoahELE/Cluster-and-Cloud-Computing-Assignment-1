@@ -1,12 +1,23 @@
 from mpi4py import MPI
 
-from utils import merge_and_print_results, process_lines, send_lines
+from process_utils import (
+    merge_and_print_results,
+    process_lines,
+    send_lines,
+    single_process,
+)
+
+file = "../twitter-100gb.json"
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
+size = comm.Get_size()
 
-if rank == 0:
-    send_lines("../twitter-100gb.json", comm)
-    merge_and_print_results(comm)
+if size > 1:
+    if rank == 0:
+        send_lines(file, comm)
+        merge_and_print_results(comm)
+    else:
+        process_lines(comm)
 else:
-    process_lines(comm)
+    single_process(file)

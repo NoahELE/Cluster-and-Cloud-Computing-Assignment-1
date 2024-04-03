@@ -6,6 +6,39 @@ import orjson
 from mpi4py.MPI import Intracomm
 
 
+def single_process(file: str) -> None:
+    """process and print the results in a single process"""
+    hour_sentiment: dict[datetime, float] = defaultdict(float)
+    day_sentiment: dict[datetime, float] = defaultdict(float)
+    hour_tweets: dict[datetime, int] = defaultdict(int)
+    day_tweets: dict[datetime, int] = defaultdict(int)
+    with open(file, encoding="utf-8") as f:
+        for line in f:
+            line = line.rstrip(",\n")
+            try:
+                row = orjson.loads(line)
+            except orjson.JSONDecodeError:
+                # if the line is not a valid JSON, skip it
+                # in this case, it should be the first and last line of the file
+                continue
+            sentiment = get_sentiment(row)
+            hour = get_hour(row)
+            day = get_day(row)
+            if hour is not None:
+                hour_tweets[hour] += 1
+                if sentiment is not None:
+                    hour_sentiment[hour] += sentiment
+            if day is not None:
+                day_tweets[day] += 1
+                if sentiment is not None:
+                    day_sentiment[day] += sentiment
+    # print the results
+    print(f"happiest hour: {max(hour_sentiment, key=lambda k :hour_sentiment[k])}")
+    print(f"happiest day: {max(day_sentiment, key=lambda k :day_sentiment[k])}")
+    print(f"most active hour: {max(hour_tweets, key=lambda k :hour_tweets[k])}")
+    print(f"most active day: {max(day_tweets, key=lambda k :day_tweets[k])}")
+
+
 def send_lines(file: str, comm: Intracomm) -> None:
     """send the lines of data file from rank 0 to other ranks"""
     size = comm.Get_size()
