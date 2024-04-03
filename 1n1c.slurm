@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --nodes=2
-#SBATCH --ntasks=8
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
 #SBATCH --time=0-12:00:00
 
 # Load required modules
@@ -16,4 +16,5 @@ source ~/.venv/bin/activate
 pip install orjson
 
 # Launch multiple process python code
-time srun -n 8 python3 main.py
+echo "running with 1 node and 1 cores"
+time srun -n 8 python3 process_twitter_data.py
