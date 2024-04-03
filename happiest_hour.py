@@ -22,6 +22,8 @@ for row in rows:
     if sentiment is None:
         continue
     hour = get_hour(row)
+    if hour is None:
+        continue
     if hour not in hour_sentiment:
         hour_sentiment[hour] = []
     hour_sentiment[hour].append(sentiment)

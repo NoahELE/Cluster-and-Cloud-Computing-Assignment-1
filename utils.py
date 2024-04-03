@@ -27,8 +27,11 @@ def get_sentiment(row: dict[str, Any]) -> float | None:
         return None
 
 
-def get_hour(row: dict[str, Any]) -> int:
+def get_hour(row: dict[str, Any]) -> int | None:
     """get the hour from the row"""
-    datetime_str = row["doc"]["data"]["created_at"]
-    parsed = datetime.fromisoformat(datetime_str)
-    return parsed.hour
+    try:
+        datetime_str = row["doc"]["data"]["created_at"]
+        parsed = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+        return parsed.hour
+    except KeyError:
+        return None

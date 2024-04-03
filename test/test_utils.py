@@ -2,7 +2,7 @@ import orjson
 
 from utils import get_hour, get_lines, get_sentiment
 
-lines = get_lines("twitter-1mb.json")
+lines = get_lines("../twitter-1mb.json")
 
 
 def test_get_sentiment() -> None:
