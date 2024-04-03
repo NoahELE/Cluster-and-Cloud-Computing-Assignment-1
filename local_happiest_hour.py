@@ -1,6 +1,6 @@
 from utils import get_hour, get_lines, get_sentiment, parse_line
 
-lines = get_lines("../twitter-1mb.json")
+lines = get_lines("../twitter-50mb.json")
 rows = [parse_line(line) for line in lines]
 
 hour_sentiment: dict[int, float] = {}
