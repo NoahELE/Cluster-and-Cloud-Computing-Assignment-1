@@ -26,15 +26,15 @@ for row in rows:
         hour_sentiment[hour] = 0
     hour_sentiment[hour] += sentiment
 
-gathered: list[dict[int, list[float]]] | None = comm.gather(hour_sentiment, root=0)
+gathered: list[dict[int, float]] | None = comm.gather(hour_sentiment, root=0)
 
 # gather data on rank 0
 if rank == 0:
-    merged: dict[int, list[float]] = {}
+    merged: dict[int, float] = {}
     assert gathered is not None
     for g in gathered:
         for k, v in g.items():
             if k not in merged:
-                merged[k] = []
-            merged[k].extend(v)
+                merged[k] = 0
+            merged[k] += v
     print("happiest hour: ", max(merged.keys(), key=lambda k: (merged[k])))
