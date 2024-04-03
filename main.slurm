@@ -16,5 +16,4 @@ source ~/.venv/bin/activate
 pip install orjson
 
 # Launch multiple process python code
-echo "searching for happiest hour..."
-time srun -n 8 python3 happiest_hour.py
+time srun -n 8 python3 main.py
