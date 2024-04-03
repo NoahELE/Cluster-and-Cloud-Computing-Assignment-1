@@ -1,19 +1,19 @@
 import itertools
 from datetime import datetime
-from typing import Any, Generator
+from typing import Any
 
 import orjson
 
 DATA_100GB_LINES = 100000001
 
 
-def get_lines(file: str, start: int, end: int) -> Generator[str, None, None]:
+def get_lines(file: str, start: int, end: int) -> list[str]:
     """read the lines of data file (skip the first and last line)"""
     with open(file, encoding="utf-8") as f:
         # get the lines
         lines = itertools.islice(f, start, end)
         # remove trailing comma and newline
-        lines = (line.rstrip(",\n") for line in lines)
+        lines = [line.rstrip(",\n") for line in lines]
         return lines
 
 
