@@ -22,7 +22,13 @@ def parse_line(line: str) -> dict[str, Any]:
 def get_sentiment(row: dict[str, Any]) -> float | None:
     """get the sentiment from the row, return None if it does not exist"""
     try:
-        return row["doc"]["data"]["sentiment"]
+        sentiment = row["doc"]["data"]["sentiment"]
+        if isinstance(sentiment, float):
+            return sentiment
+        elif isinstance(sentiment, dict):
+            return sentiment["score"]
+        else:
+            raise ValueError("Invalid sentiment type", sentiment)
     except KeyError:
         return None
 
