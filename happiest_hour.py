@@ -1,5 +1,3 @@
-import statistics
-
 from mpi4py import MPI
 
 from utils import get_hour, get_lines, get_sentiment, parse_line
@@ -16,7 +14,7 @@ end = start + chunk_size if rank != size - 1 else len(lines)
 
 rows = [parse_line(line) for line in lines[start:end]]
 
-hour_sentiment: dict[int, list[float]] = {}
+hour_sentiment: dict[int, float] = {}
 for row in rows:
     sentiment = get_sentiment(row)
     if sentiment is None:
@@ -25,8 +23,8 @@ for row in rows:
     if hour is None:
         continue
     if hour not in hour_sentiment:
-        hour_sentiment[hour] = []
-    hour_sentiment[hour].append(sentiment)
+        hour_sentiment[hour] = 0
+    hour_sentiment[hour] += sentiment
 
 gathered: list[dict[int, list[float]]] | None = comm.gather(hour_sentiment, root=0)
 
@@ -39,6 +37,4 @@ if rank == 0:
             if k not in merged:
                 merged[k] = []
             merged[k].extend(v)
-    print(
-        "happiest hour: ", max(merged.keys(), key=lambda k: statistics.mean(merged[k]))
-    )
+    print("happiest hour: ", max(merged.keys(), key=lambda k: (merged[k])))

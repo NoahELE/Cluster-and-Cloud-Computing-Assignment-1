@@ -37,7 +37,8 @@ def get_hour(row: dict[str, Any]) -> int | None:
     """get the hour from the row"""
     try:
         datetime_str = row["doc"]["data"]["created_at"]
-        parsed = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+        # parsed = datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+        parsed = datetime.fromisoformat(datetime_str)
         return parsed.hour
     except KeyError:
         return None
