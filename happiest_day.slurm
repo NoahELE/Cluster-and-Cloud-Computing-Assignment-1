@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --nodes=2
-#SBATCH --ntasks=4
+#SBATCH --nodes=4
+#SBATCH --ntasks=2
 #SBATCH --time=0-12:00:00
 
 # Load required modules
@@ -16,5 +16,5 @@ source ~/.venv/bin/activate
 pip install orjson
 
 # Launch multiple process python code
-echo "searching for happiest hour..."
-time srun -n 8 python3 happiest_hour.py
+echo "searching for happiest day..."
+time srun -n 8 python3 happiest_day.py
