@@ -23,7 +23,7 @@ def get_sentiment(row: dict[str, Any]) -> float | None:
     """get the sentiment from the row, return None if it does not exist"""
     try:
         sentiment = row["doc"]["data"]["sentiment"]
-        if isinstance(sentiment, float):
+        if isinstance(sentiment, float) or isinstance(sentiment, int):
             return sentiment
         elif isinstance(sentiment, dict):
             return sentiment["score"]
