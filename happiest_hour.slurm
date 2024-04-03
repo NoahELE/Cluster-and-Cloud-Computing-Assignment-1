@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --nodes=2
-#SBATCH --ntasks=4
+#SBATCH --ntasks=8
 #SBATCH --time=0-12:00:00
 
 # Load required modules
