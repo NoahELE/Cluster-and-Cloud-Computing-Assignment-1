@@ -39,4 +39,6 @@ if rank == 0:
             if k not in merged:
                 merged[k] = []
             merged[k].extend(v)
-    print("happiest hour: ", max(merged.keys(), key=lambda k: statistics.mean(merged[k])))
+    print(
+        "happiest hour: ", max(merged.keys(), key=lambda k: statistics.mean(merged[k]))
+    )
