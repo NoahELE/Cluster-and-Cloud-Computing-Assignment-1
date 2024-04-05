@@ -1,3 +1,5 @@
+import sys
+
 from mpi4py import MPI
 
 from process_utils import (
@@ -7,7 +9,8 @@ from process_utils import (
     single_process,
 )
 
-filename = "../twitter-100gb.json"
+# read the filename from the command line
+filename = sys.argv[1]
 
 comm = MPI.COMM_WORLD
 rank = comm.rank
