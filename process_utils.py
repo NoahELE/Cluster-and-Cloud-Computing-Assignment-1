@@ -12,18 +12,20 @@ def single_process(file: str) -> None:
     day_sentiment: dict[datetime, float] = defaultdict(float)
     hour_tweets: dict[datetime, int] = defaultdict(int)
     day_tweets: dict[datetime, int] = defaultdict(int)
+
     with open(file, encoding="utf-8") as f:
+        # process the data line by line
         for line in f:
-            line = line.rstrip(",\n")
-            try:
-                row = orjson.loads(line)
-            except orjson.JSONDecodeError:
-                # if the line is not a valid JSON, skip it
-                # in this case, it should be the first and last line of the file
+            # the first and last line of the file do not end with ",\n"
+            if not line.endswith(",\n"):
                 continue
+
+            line = line.rstrip(",\n")
+            row = orjson.loads(line)
             sentiment = get_sentiment(row)
             hour = get_hour(row)
             day = get_day(row)
+
             if hour is not None:
                 hour_tweets[hour] += 1
                 if sentiment is not None:
@@ -32,6 +34,7 @@ def single_process(file: str) -> None:
                 day_tweets[day] += 1
                 if sentiment is not None:
                     day_sentiment[day] += sentiment
+
     # print the results
     print(f"happiest hour: {max(hour_sentiment, key=lambda k :hour_sentiment[k])}")
     print(f"happiest day: {max(day_sentiment, key=lambda k :day_sentiment[k])}")
@@ -62,19 +65,19 @@ def process_lines(
     day_sentiment: dict[datetime, float] = defaultdict(float)
     hour_tweets: dict[datetime, int] = defaultdict(int)
     day_tweets: dict[datetime, int] = defaultdict(int)
+
     # process the lines until None is received
     while (line := comm.recv(source=0)) is not None:
-        # remove trailing comma and newline
-        line = line.rstrip(",\n")
-        try:
-            row = orjson.loads(line)
-        except orjson.JSONDecodeError:
-            # if the line is not a valid JSON, skip it
-            # in this case, it should be the first and last line of the file
+        # the first and last line of the file do not end with ",\n"
+        if not line.endswith(",\n"):
             continue
+
+        line = line.rstrip(",\n")
+        row = orjson.loads(line)
         sentiment = get_sentiment(row)
         hour = get_hour(row)
         day = get_day(row)
+
         if hour is not None:
             hour_tweets[hour] += 1
             if sentiment is not None:
@@ -83,36 +86,25 @@ def process_lines(
             day_tweets[day] += 1
             if sentiment is not None:
                 day_sentiment[day] += sentiment
+
     # send the results to rank 0
-    comm.send(
-        (
-            hour_sentiment,
-            day_sentiment,
-            hour_tweets,
-            day_tweets,
-        ),
-        dest=0,
-    )
+    comm.send((hour_sentiment, day_sentiment, hour_tweets, day_tweets), dest=0)
 
 
 def merge_and_print_results(comm: Intracomm) -> None:
     """merge the results from all ranks"""
-    size = comm.Get_size()
+    size = comm.size
     # receive the results from all ranks
     results = []
     for _ in range(1, size):
         results.append(comm.recv())
+
     # merge the results
     merged_hour_sentiment: dict[datetime, float] = defaultdict(float)
     merged_day_sentiment: dict[datetime, float] = defaultdict(float)
     merged_hour_tweets: dict[datetime, int] = defaultdict(int)
     merged_day_tweets: dict[datetime, int] = defaultdict(int)
-    for (
-        hour_sentiment,
-        day_sentiment,
-        hour_tweets,
-        day_tweets,
-    ) in results:
+    for hour_sentiment, day_sentiment, hour_tweets, day_tweets in results:
         for hour, sentiment in hour_sentiment.items():
             merged_hour_sentiment[hour] += sentiment
         for day, sentiment in day_sentiment.items():
@@ -121,6 +113,7 @@ def merge_and_print_results(comm: Intracomm) -> None:
             merged_hour_tweets[hour] += tweets
         for day, tweets in day_tweets.items():
             merged_day_tweets[day] += tweets
+
     # print the results
     print(
         f"happiest hour: {max(merged_hour_sentiment, key=lambda k :merged_hour_sentiment[k])}"
