@@ -44,18 +44,22 @@ def process_tweets():
 
 process_tweets()
 
+
 # print the running time
 log_time('Time taken for reading and processing: ', start_time)
 
 # gather the results from all the processes to the root process
-hour_sentiments_final = comm.gather(hour_sentiments, root=0)
-hour_tweets_final = comm.gather(hour_tweets, root=0)
 
+gathered_hour_sentiments = comm.gather(hour_sentiments, root=0)
+gathered_hour_tweets = comm.gather(hour_tweets, root=0)
 
-happiest_hour_calculation(hour_sentiments_final)
-happiest_day_calculation(hour_sentiments_final)
-most_active_hour_calculation(hour_tweets_final)
-most_active_day_calculation(hour_tweets_final)
+if comm.rank == 0:  # Only in the root process
+    hour_sentiments_final = np.sum(gathered_hour_sentiments, axis=0)
+    hour_tweets_final = np.sum(gathered_hour_tweets, axis=0)
+    happiest_hour_calculation(hour_sentiments_final)
+    happiest_day_calculation(hour_sentiments_final)
+    most_active_hour_calculation(hour_tweets_final)
+    most_active_day_calculation(hour_tweets_final)
 
 # print the running time
 log_time('Total time taken: ', start_time)

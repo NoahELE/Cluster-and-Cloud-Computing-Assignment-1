@@ -1,10 +1,11 @@
 from datetime import datetime
 import numpy as np
-import re
+import re, os, time
 
 
 def read_file(file_path, rank, size):
 
+    # paraellelization of reading the file
     file_size = os.path.getsize(file_path)
     chunk_size = file_size // size
     start = rank * chunk_size
@@ -41,7 +42,7 @@ def get_date(tweet_line):
 def get_sentiment(tweet_line):
     if "sentiment" not in tweet_line:
         return None
-    pattern = r'"sentiment":\s*(-?\d+\.\d+)'
+    pattern = r'"sentiment":\s*(-?\d+\.?\d+)'
     match = re.search(pattern, tweet_line)
 
     if match:
