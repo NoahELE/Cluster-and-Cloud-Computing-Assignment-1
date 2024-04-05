@@ -26,6 +26,3 @@ pip install orjson > /dev/null
 echo "running with 1 node and 8 cores"
 echo "processing file $1"
 time srun python process_twitter_data.py $1
-
-# Job monitor command to list the resource usage
-my-job-stats -a -n -s
