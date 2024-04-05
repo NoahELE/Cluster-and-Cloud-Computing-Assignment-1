@@ -44,7 +44,7 @@ def single_process(file: str) -> None:
 
 def send_lines(file: str, comm: Intracomm) -> None:
     """send the lines of data file from rank 0 to other ranks"""
-    size = comm.Get_size()
+    size = comm.size
     ranks = range(1, size)
     i = 0
     with open(file, encoding="utf-8") as f:
@@ -57,9 +57,7 @@ def send_lines(file: str, comm: Intracomm) -> None:
         comm.send(None, dest=r)
 
 
-def process_lines(
-    comm: Intracomm,
-) -> None:
+def process_lines(comm: Intracomm) -> None:
     """process the lines of data sent by rank 0"""
     hour_sentiment: dict[datetime, float] = defaultdict(float)
     day_sentiment: dict[datetime, float] = defaultdict(float)
@@ -135,8 +133,8 @@ def get_sentiment(row: dict[str, Any]) -> float | None:
         sentiment = row["doc"]["data"]["sentiment"]
         if isinstance(sentiment, float) or isinstance(sentiment, int):
             return sentiment
-        elif isinstance(sentiment, dict):
-            return sentiment["score"]
+        # elif isinstance(sentiment, dict):
+        #     return sentiment["score"]
         else:
             raise ValueError("Invalid sentiment type", sentiment)
     except KeyError:
