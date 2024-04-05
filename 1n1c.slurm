@@ -19,6 +19,7 @@ module load GCC/11.3.0 OpenMPI/4.1.4 mpi4py
 python -m venv ~/.venv > /dev/null
 source ~/.venv/bin/activate > /dev/null
 # Install addtional packages
+python -m pip install --upgrade pip > /dev/null
 pip install orjson > /dev/null
 
 # Launch multiple process python code
