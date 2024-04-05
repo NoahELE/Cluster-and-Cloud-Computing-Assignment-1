@@ -136,7 +136,8 @@ def get_sentiment(row: dict[str, Any]) -> float | None:
         # elif isinstance(sentiment, dict):
         #     return sentiment["score"]
         else:
-            raise ValueError("Invalid sentiment type", sentiment)
+            # raise ValueError("Invalid sentiment type", sentiment)
+            return None
     except KeyError:
         return None
 
