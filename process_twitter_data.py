@@ -7,17 +7,19 @@ from process_utils import (
     single_process,
 )
 
-file = "../twitter-100gb.json"
+filename = "../twitter-100gb.json"
 
 comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-size = comm.Get_size()
+rank = comm.rank
+size = comm.size
 
-if size > 1:
+if size == 1:
+    # if only one process, run the single process code
+    single_process(filename)
+else:
+    # else run the parallel code
     if rank == 0:
-        send_lines(file, comm)
+        send_lines(filename, comm)
         merge_and_print_results(comm)
     else:
         process_lines(comm)
-else:
-    single_process(file)
