@@ -1,4 +1,5 @@
 import sys
+import time
 
 from mpi4py import MPI
 
@@ -21,8 +22,14 @@ if size == 1:
     single_process(filename)
 else:
     # else run the parallel code
+    start = time.time()
     if rank == 0:
         send_lines(filename, comm)
-        merge_and_print_results(comm)
     else:
         process_lines(comm)
+    print(f"Time taken for process on rank {rank}: {time.time() - start}")
+
+    start = time.time()
+    if rank == 0:
+        merge_and_print_results(comm)
+        print(f"Time taken for merging on rank {rank}: {time.time() - start}")
