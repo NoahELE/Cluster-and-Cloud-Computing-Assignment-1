@@ -35,7 +35,9 @@ filename = sys.argv[1]
 
 if rank == 0:
     total_lines = count_lines(filename)
-total_lines: int = comm.bcast(total_lines, root=0)
+else:
+    total_lines = 0
+total_lines = comm.bcast(total_lines, root=0)
 
 
 lines = read_lines(filename, total_lines, rank, size)
