@@ -18,7 +18,7 @@ module load GCC/11.3.0 OpenMPI/4.1.4 mpi4py
 # Create and activate virtual environment
 python -m venv ~/.venv > /dev/null
 source ~/.venv/bin/activate > /dev/null
-# Install addtional packages
+# Install additional packages
 python -m pip install --upgrade pip > /dev/null
 pip install orjson > /dev/null
 

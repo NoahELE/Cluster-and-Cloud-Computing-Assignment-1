@@ -37,7 +37,7 @@ filename = sys.argv[1]
 if rank == 0:
     start = time.time()
     total_lines = count_lines(filename)
-    print(f"Time for counting lines: {time.time() - start}s")
+    print(f"Time for counting lines on rank {rank}: {time.time() - start}s")
 else:
     total_lines = 0
 total_lines = comm.bcast(total_lines, root=0)
@@ -66,7 +66,7 @@ for line in lines:
         hour_tweets[hour] += 1
         if sentiment is not None:
             hour_sentiment[hour] += sentiment
-print(f"Time for processing lines: {time.time() - start}s")
+print(f"Time for processing lines on rank {rank}: {time.time() - start}s")
 
 hour_sentiment_list = comm.gather(hour_sentiment, root=0)
 day_sentiment_list = comm.gather(day_sentiment, root=0)
@@ -107,4 +107,4 @@ if rank == 0:
     print(
         f"most active day: {max(merged_day_tweets, key=lambda k :merged_day_tweets[k])}"
     )
-    print(f"Time for merging results: {time.time() - start}s")
+    print(f"Time for merging results on rank {rank}: {time.time() - start}s")
