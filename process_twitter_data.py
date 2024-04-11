@@ -16,10 +16,12 @@ def read_file(filename: str, rank: int, size: int) -> Generator[str, None, None]
     start_pos = rank * chunk_size
     end_pos = start_pos + chunk_size if rank != size - 1 else file_size
     with open(filename, "rb") as f:
+        # check if the previous byte is a newline
         if start_pos != 0:
             f.seek(start_pos - 1)
             prev_byte = f.read(1)
             if prev_byte.decode("utf-8") != "\n":
+                # if not skip the line
                 f.readline()
         while f.tell() < end_pos:
             yield f.readline().decode("utf-8")
