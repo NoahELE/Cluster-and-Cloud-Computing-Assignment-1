@@ -11,18 +11,18 @@ from process_utils import get_created_time, get_sentiment, to_day, to_hour
 
 def read_file(filename: str, rank: int, size: int) -> Generator[str, None, None]:
     """read the file given current rank and size and generate lines"""
-    filesize = os.path.getsize(filename)
-    chunk_size = filesize // size
+    file_size = os.path.getsize(filename)
+    chunk_size = file_size // size
     start_pos = rank * chunk_size
-    end_pos = start_pos + chunk_size if rank != size - 1 else filesize
+    end_pos = start_pos + chunk_size if rank != size - 1 else file_size
     with open(filename, "rb") as f:
         if start_pos != 0:
             f.seek(start_pos - 1)
             prev_byte = f.read(1)
-            if prev_byte.decode() != "\n":
+            if prev_byte.decode("utf-8") != "\n":
                 f.readline()
         while f.tell() < end_pos:
-            yield f.readline().decode()
+            yield f.readline().decode("utf-8")
 
 
 def process_lines(
