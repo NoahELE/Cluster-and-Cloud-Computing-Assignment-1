@@ -15,14 +15,14 @@ def read_file(filename: str, rank: int, size: int) -> Generator[str, None, None]
     chunk_size = filesize // size
     start_pos = rank * chunk_size
     end_pos = start_pos + chunk_size if rank != size - 1 else filesize
-    with open(filename, "r", encoding="utf-8") as f:
+    with open(filename, "rb") as f:
         if start_pos != 0:
             f.seek(start_pos - 1)
-            prev_char = f.read(1)
-            if prev_char != "\n":
+            prev_byte = f.read(1)
+            if prev_byte.decode() != "\n":
                 f.readline()
         while f.tell() < end_pos:
-            yield f.readline()
+            yield f.readline().decode()
 
 
 def process_lines(
@@ -42,8 +42,8 @@ def process_lines(
         created_time = get_created_time(line)
         if created_time is None:
             continue
-        hour = str(to_day(created_time))
-        day = str(to_hour(created_time))
+        hour = str(to_hour(created_time))
+        day = str(to_day(created_time))
         sentiment = get_sentiment(line)
 
         hour_tweets[hour] += 1
@@ -107,7 +107,7 @@ start_time = time.time()
 lines = read_file(filename, rank, size)
 result = process_lines(lines)
 end_time = time.time()
-print(f"rank {rank} take {end_time - start_time} to process data")
+print(f"rank {rank} take {end_time - start_time}s to process data")
 
 results = comm.gather(result, root=0)
 if rank == 0:
