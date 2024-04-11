@@ -15,13 +15,6 @@ module purge
 module load GCCcore/11.3.0 Python/3.10.4
 module load GCC/11.3.0 OpenMPI/4.1.4 mpi4py
 
-# Create and activate virtual environment
-python -m venv ~/.venv > /dev/null
-source ~/.venv/bin/activate > /dev/null
-# Install additional packages
-python -m pip install --upgrade pip > /dev/null
-pip install orjson > /dev/null
-
 # Launch multiple process python code
 echo "running with 1 node and 1 cores"
 echo "processing file $1"
