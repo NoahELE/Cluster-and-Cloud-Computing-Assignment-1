@@ -14,15 +14,24 @@ def read_file(filename: str, rank: int, size: int) -> Generator[str, None, None]
     file_size = os.path.getsize(filename)
     chunk_size = file_size // size
     start_pos = rank * chunk_size
-    end_pos = start_pos + chunk_size if rank != size - 1 else file_size
+    # end_pos = start_pos + chunk_size if rank != size - 1 else file_size
+    bytes_read = 0
     with open(filename, "rb") as f:
-        if start_pos != 0:
-            f.seek(start_pos - 1)
-            prev_byte = f.read(1)
-            if prev_byte.decode("utf-8") != "\n":
-                f.readline()
-        while f.tell() < end_pos:
-            yield f.readline().decode("utf-8")
+        f.seek(start_pos)
+        for line in f:
+            if rank == 0 or bytes_read > 0:
+                yield line.decode("utf-8")
+                bytes_read += len(line)
+            if bytes_read >= chunk_size:
+                break
+    # with open(filename, "rb") as f:
+    #     if start_pos != 0:
+    #         f.seek(start_pos - 1)
+    #         prev_byte = f.read(1)
+    #         if prev_byte.decode("utf-8") != "\n":
+    #             f.readline()
+    #     while f.tell() < end_pos:
+    #         yield f.readline().decode("utf-8")
 
 
 def process_lines(
