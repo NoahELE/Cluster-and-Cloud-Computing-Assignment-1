@@ -17,8 +17,7 @@ def read_file(filename: str, rank: int, size: int) -> Generator[str, None, None]
     end_pos = start_pos + chunk_size if rank != size - 1 else filesize
     with open(filename, "r", encoding="utf-8") as f:
         if start_pos != 0:
-            f.seek(start_pos)
-            f.seek(-1, os.SEEK_CUR)
+            f.seek(start_pos - 1)
             prev_char = f.read(1)
             if prev_char != "\n":
                 f.readline()
