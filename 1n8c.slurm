@@ -18,4 +18,4 @@ module load GCC/11.3.0 OpenMPI/4.1.4 mpi4py
 # Launch multiple process python code
 echo "running with 1 node and 8 cores"
 echo "processing file $1"
-time srun python process_twitter_data1.py $1
+time srun python process_twitter_data.py $1

@@ -2,9 +2,9 @@ import matplotlib.pyplot as plt
 import polars as pl
 import seaborn as sns
 
-time_1n1c_list = ["39m32.343s", "27m10.711s", "24m15.404s"]
-time_1n8c_list = ["9m55.108s", "9m39.067s", "8m52.014s"]
-time_2n8c_list = ["10m47.546s", "9m13.522s", "8m17.379s"]
+time_1n1c_list = ["19m40.081s", "20m58.300s"]
+time_1n8c_list = ["3m7.192s", "3m49.165s"]
+time_2n8c_list = ["2m51.745s", "3m57.090s"]
 
 
 def parse_time_as_seconds(time_str: str) -> float:
@@ -16,20 +16,15 @@ def parse_time_as_seconds(time_str: str) -> float:
 df = pl.DataFrame(
     {
         "config": ["1 node 1 core", "1 node 8 cores", "2 nodes 8 cores"],
-        "algorithm1_time": [
+        "algorithm1": [
             parse_time_as_seconds(time_1n1c_list[0]),
             parse_time_as_seconds(time_1n8c_list[0]),
             parse_time_as_seconds(time_2n8c_list[0]),
         ],
-        "algorithm2_time": [
+        "algorithm2": [
             parse_time_as_seconds(time_1n1c_list[1]),
             parse_time_as_seconds(time_1n8c_list[1]),
             parse_time_as_seconds(time_2n8c_list[1]),
-        ],
-        "algorithm3_time": [
-            parse_time_as_seconds(time_1n1c_list[2]),
-            parse_time_as_seconds(time_1n8c_list[2]),
-            parse_time_as_seconds(time_2n8c_list[2]),
         ],
     }
 )
@@ -37,9 +32,9 @@ df = pl.DataFrame(
 df = df.melt(id_vars=["config"], value_name="time", variable_name="algorithm")
 print(df)
 
-# sns.set_theme(style="whitegrid")
+sns.set_theme(style="darkgrid")
 ax = sns.barplot(data=df, x="config", y="time", hue="algorithm")
-ax.set_title("Execution time of jobs")
+ax.set_title("Execution Time of Jobs")
 ax.set_xlabel("Configuration (nodes and cores)")
 ax.set_ylabel("Time (s)")
 plt.savefig("execution_time.png")
