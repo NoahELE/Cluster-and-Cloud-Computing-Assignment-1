@@ -48,7 +48,7 @@ def send_lines(filename: str, comm: Intracomm) -> None:
         # send the lines to ranks 1 to size - 1
         for line in f:
             # send the line to the rank
-            comm.send(line, dest=ranks[i])
+            comm.send(line.decode("utf-8"), dest=ranks[i])
             # move to next rank
             i = (i + 1) % len(ranks)
     # send None to all ranks to indicate the end of the data
@@ -65,9 +65,6 @@ def process_lines(comm: Intracomm) -> None:
 
     # process the lines until None is received
     while (line := comm.recv(source=0)) is not None:
-        # decode the line
-        line = line.decode("utf-8")
-
         created_time = get_created_time(line)
         if created_time is None:
             continue
