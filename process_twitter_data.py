@@ -1,21 +1,19 @@
 import sys
 import time
 from collections import defaultdict
-from datetime import datetime
 
-import orjson
 from mpi4py import MPI
 from mpi4py.MPI import Intracomm
 
-from process_utils import get_day, get_hour, get_sentiment
+from process_utils import get_created_time, get_sentiment, to_day, to_hour
 
 
 def single_process(filename: str) -> None:
     """process and print the results in a single process"""
-    hour_sentiment: dict[datetime, float] = defaultdict(float)
-    day_sentiment: dict[datetime, float] = defaultdict(float)
-    hour_tweets: dict[datetime, int] = defaultdict(int)
-    day_tweets: dict[datetime, int] = defaultdict(int)
+    hour_sentiment: dict[str, float] = defaultdict(float)
+    day_sentiment: dict[str, float] = defaultdict(float)
+    hour_tweets: dict[str, int] = defaultdict(int)
+    day_tweets: dict[str, int] = defaultdict(int)
 
     with open(filename, encoding="utf-8") as f:
         # process the data line by line
@@ -24,20 +22,18 @@ def single_process(filename: str) -> None:
             if not line.endswith(",\n"):
                 continue
 
-            line = line.rstrip(",\n")
-            row = orjson.loads(line)
-            sentiment = get_sentiment(row)
-            hour = get_hour(row)
-            day = get_day(row)
+            created_time = get_created_time(line)
+            if created_time is None:
+                continue
+            hour = str(to_hour(created_time))
+            day = str(to_day(created_time))
+            sentiment = get_sentiment(line)
 
-            if hour is not None:
-                hour_tweets[hour] += 1
-                if sentiment is not None:
-                    hour_sentiment[hour] += sentiment
-            if day is not None:
-                day_tweets[day] += 1
-                if sentiment is not None:
-                    day_sentiment[day] += sentiment
+            hour_tweets[hour] += 1
+            day_tweets[day] += 1
+            if sentiment is not None:
+                hour_sentiment[hour] += sentiment
+                day_sentiment[day] += sentiment
 
     # print the results
     print(f"happiest hour: {max(hour_sentiment, key=lambda k :hour_sentiment[k])}")
@@ -54,43 +50,41 @@ def send_lines(filename: str, comm: Intracomm) -> None:
     with open(filename, encoding="utf-8") as f:
         # send the lines to ranks 1 to size - 1
         for line in f:
-            comm.send(line, dest=ranks[i])
+            comm.isend(line, dest=ranks[i])
             i = (i + 1) % len(ranks)
     # send None to all ranks to indicate the end of the data
     for r in ranks:
-        comm.send(None, dest=r)
+        comm.isend(None, dest=r)
 
 
 def process_lines(comm: Intracomm) -> None:
     """process the lines of data sent by rank 0"""
-    hour_sentiment: dict[datetime, float] = defaultdict(float)
-    day_sentiment: dict[datetime, float] = defaultdict(float)
-    hour_tweets: dict[datetime, int] = defaultdict(int)
-    day_tweets: dict[datetime, int] = defaultdict(int)
+    hour_sentiment: dict[str, float] = defaultdict(float)
+    day_sentiment: dict[str, float] = defaultdict(float)
+    hour_tweets: dict[str, int] = defaultdict(int)
+    day_tweets: dict[str, int] = defaultdict(int)
 
     # process the lines until None is received
-    while (line := comm.recv(source=0)) is not None:
+    while (line := comm.irecv(source=0).wait()) is not None:
         # the first and last line of the file do not end with ",\n"
         if not line.endswith(",\n"):
             continue
 
-        line = line.rstrip(",\n")
-        row = orjson.loads(line)
-        sentiment = get_sentiment(row)
-        hour = get_hour(row)
-        day = get_day(row)
+        created_time = get_created_time(line)
+        if created_time is None:
+            continue
+        hour = str(to_day(created_time))
+        day = str(to_hour(created_time))
+        sentiment = get_sentiment(line)
 
-        if hour is not None:
-            hour_tweets[hour] += 1
-            if sentiment is not None:
-                hour_sentiment[hour] += sentiment
-        if day is not None:
-            day_tweets[day] += 1
-            if sentiment is not None:
-                day_sentiment[day] += sentiment
+        hour_tweets[hour] += 1
+        day_tweets[day] += 1
+        if sentiment is not None:
+            hour_sentiment[hour] += sentiment
+            day_sentiment[day] += sentiment
 
     # send the results to rank 0
-    comm.send((hour_sentiment, day_sentiment, hour_tweets, day_tweets), dest=0)
+    comm.isend((hour_sentiment, day_sentiment, hour_tweets, day_tweets), dest=0)
 
 
 def merge_and_print_results(comm: Intracomm) -> None:
@@ -99,13 +93,13 @@ def merge_and_print_results(comm: Intracomm) -> None:
     # receive the results from all ranks
     results = []
     for _ in range(1, size):
-        results.append(comm.recv())
+        results.append(comm.irecv().wait())
 
     # merge the results
-    merged_hour_sentiment: dict[datetime, float] = defaultdict(float)
-    merged_day_sentiment: dict[datetime, float] = defaultdict(float)
-    merged_hour_tweets: dict[datetime, int] = defaultdict(int)
-    merged_day_tweets: dict[datetime, int] = defaultdict(int)
+    merged_hour_sentiment: dict[str, float] = defaultdict(float)
+    merged_day_sentiment: dict[str, float] = defaultdict(float)
+    merged_hour_tweets: dict[str, int] = defaultdict(int)
+    merged_day_tweets: dict[str, int] = defaultdict(int)
     for hour_sentiment, day_sentiment, hour_tweets, day_tweets in results:
         for hour, sentiment in hour_sentiment.items():
             merged_hour_sentiment[hour] += sentiment
@@ -143,14 +137,18 @@ if size == 1:
     single_process(filename)
 else:
     # else run the parallel code
-    start = time.time()
     if rank == 0:
+        # send lines to other ranks
+        start = time.time()
         send_lines(filename, comm)
-    else:
-        process_lines(comm)
-    print(f"Time taken for process on rank {rank}: {time.time() - start}s")
+        print(f"Time taken for sending on rank {rank}: {time.time() - start}s")
 
-    start = time.time()
-    if rank == 0:
+        # merge the results from other ranks
+        start = time.time()
         merge_and_print_results(comm)
         print(f"Time taken for merging on rank {rank}: {time.time() - start}s")
+    else:
+        # process the lines sent by rank 0
+        start = time.time()
+        process_lines(comm)
+        print(f"Time taken for processing on rank {rank}: {time.time() - start}s")
