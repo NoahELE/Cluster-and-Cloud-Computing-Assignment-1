@@ -3,7 +3,7 @@ import time
 from collections import defaultdict
 
 from mpi4py import MPI
-from mpi4py.MPI import Intracomm
+from mpi4py.MPI import Intracomm, Request
 
 from process_utils import get_created_time, get_sentiment, to_day, to_hour
 
@@ -46,15 +46,23 @@ def send_lines(filename: str, comm: Intracomm) -> None:
     """send the lines of data file from rank 0 to other ranks"""
     size = comm.size
     ranks = range(1, size)
+    rank_requests: list[Request | None] = [None] * size
     i = 0
     with open(filename, encoding="utf-8") as f:
         # send the lines to ranks 1 to size - 1
         for line in f:
-            comm.isend(line, dest=ranks[i])
+            # wait for previous request to finish
+            request = rank_requests[i]
+            if request is not None:
+                request.wait()
+            # send the line to the rank
+            request = comm.isend(line, dest=ranks[i])
+            rank_requests[i] = request
+            # move to next rank
             i = (i + 1) % len(ranks)
     # send None to all ranks to indicate the end of the data
     for r in ranks:
-        comm.isend(None, dest=r)
+        comm.isend(None, dest=r).wait()
 
 
 def process_lines(comm: Intracomm) -> None:
