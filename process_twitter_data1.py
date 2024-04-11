@@ -3,7 +3,7 @@ import time
 from collections import defaultdict
 
 from mpi4py import MPI
-from mpi4py.MPI import Intracomm, Request
+from mpi4py.MPI import Intracomm
 
 from process_utils import get_created_time, get_sentiment, to_day, to_hour
 
@@ -43,23 +43,17 @@ def send_lines(filename: str, comm: Intracomm) -> None:
     """send the lines of data file from rank 0 to other ranks"""
     size = comm.size
     ranks = range(1, size)
-    rank_requests: list[Request | None] = [None] * size
     i = 0
     with open(filename, "rb") as f:
         # send the lines to ranks 1 to size - 1
         for line in f:
-            # wait for previous request to finish
-            request = rank_requests[i]
-            if request is not None:
-                request.wait()
             # send the line to the rank
-            request = comm.isend(line, dest=ranks[i])
-            rank_requests[i] = request
+            comm.send(line, dest=ranks[i])
             # move to next rank
             i = (i + 1) % len(ranks)
     # send None to all ranks to indicate the end of the data
     for r in ranks:
-        comm.isend(None, dest=r).wait()
+        comm.send(None, dest=r)
 
 
 def process_lines(comm: Intracomm) -> None:
@@ -70,7 +64,7 @@ def process_lines(comm: Intracomm) -> None:
     day_tweets: dict[str, int] = defaultdict(int)
 
     # process the lines until None is received
-    while (line := comm.irecv(source=0).wait()) is not None:
+    while (line := comm.recv(source=0)) is not None:
         # decode the line
         line = line.decode("utf-8")
 
@@ -88,7 +82,7 @@ def process_lines(comm: Intracomm) -> None:
             day_sentiment[day] += sentiment
 
     # send the results to rank 0
-    comm.isend((hour_sentiment, day_sentiment, hour_tweets, day_tweets), dest=0).wait()
+    comm.send((hour_sentiment, day_sentiment, hour_tweets, day_tweets), dest=0)
 
 
 def merge_and_print_results(comm: Intracomm) -> None:
@@ -97,7 +91,7 @@ def merge_and_print_results(comm: Intracomm) -> None:
     # receive the results from all ranks
     results = []
     for _ in range(1, size):
-        results.append(comm.irecv().wait())
+        results.append(comm.recv())
 
     # merge the results
     merged_hour_sentiment: dict[str, float] = defaultdict(float)
