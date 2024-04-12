@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 
+# compile the pattern for better performance
 sentiment_pattern = re.compile(r'"sentiment":\s*(-?\d+\.?\d*)')
 created_time_pattern = re.compile(
     r'"created_at":\s*"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z)"'
@@ -17,6 +18,7 @@ def get_sentiment(line: str) -> float | None:
 
 
 def get_created_time(line: str) -> datetime | None:
+    """get the created time from the row, return None if it does not exist"""
     m = created_time_pattern.search(line)
     if m is None:
         return None
@@ -25,8 +27,10 @@ def get_created_time(line: str) -> datetime | None:
 
 
 def to_day(date: datetime) -> datetime:
+    """return the day of a datetime"""
     return date.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def to_hour(date: datetime) -> datetime:
+    """return the hour of a datetime"""
     return date.replace(minute=0, second=0, microsecond=0)

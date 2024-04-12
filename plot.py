@@ -32,7 +32,7 @@ df = pl.DataFrame(
 df = df.melt(id_vars=["config"], value_name="time", variable_name="algorithm")
 print(df)
 
-sns.set_theme(style="darkgrid")
+sns.set_theme()
 ax = sns.barplot(data=df, x="config", y="time", hue="algorithm")
 ax.set_title("Execution Time of Jobs")
 ax.set_xlabel("Configuration (nodes and cores)")
